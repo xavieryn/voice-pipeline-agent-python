@@ -13,8 +13,11 @@ from livekit.agents import (
 from livekit.agents.pipeline import VoicePipelineAgent
 from livekit.plugins import cartesia, openai, deepgram, silero, turn_detector
 
+# Using a custom agent instead of something like realtime api makes this a lot cheaper
+# I wonder how we will call functions though
 
-load_dotenv(dotenv_path=".env.local")
+
+load_dotenv(dotenv_path=".env.local") # gets all of the api keys
 logger = logging.getLogger("voice-agent")
 
 
@@ -29,6 +32,7 @@ async def entrypoint(ctx: JobContext):
             "You are a voice assistant created by LiveKit. Your interface with users will be voice. "
             "You should use short and concise responses, and avoiding usage of unpronouncable punctuation. "
             "You were created as a demo to showcase the capabilities of LiveKit's agents framework."
+            # add new prompts here (such as talk slower for older people)
         ),
     )
 
@@ -43,12 +47,12 @@ async def entrypoint(ctx: JobContext):
     # Other great providers exist like Cerebras, ElevenLabs, Groq, Play.ht, Rime, and more
     # Learn more and pick the best one for your app:
     # https://docs.livekit.io/agents/plugins
-    agent = VoicePipelineAgent(
+    agent = VoicePipelineAgent( # this is surprisingly fast considering the fact that it doesn't use speech to speech
         vad=ctx.proc.userdata["vad"],
         stt=deepgram.STT(),
-        llm=openai.LLM(model="gpt-4o-mini"),
+        llm=openai.LLM(model="gpt-4o-mini"), # TEST with different models
         tts=cartesia.TTS(),
-        turn_detector=turn_detector.EOUModel(),
+        turn_detector=turn_detector.EOUModel(), # Will detect when we interrupt the person
         # minimum delay for endpointing, used when turn detector believes the user is done with their turn
         min_endpointing_delay=0.5,
         # maximum delay for endpointing, used when turn detector does not believe the user is done with their turn
